@@ -7,7 +7,6 @@ Requirements:
 # Examples:
 
 Checkout our example notebooks. Please use them in the order stated below:
-
-* Creating a noise model: Convallaria-1-CreateNoiseModel.ipynb
-* Training a network: Convallaria-2-Training.ipynb
-* Predictig, i.e. denoising images: Convallaria-3-Prediction.ipynb
+* [Creating a noise model: Convallaria-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-1-CreateNoiseModel.ipynb)
+* [Training a network: Convallaria-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-2-Training.ipynb)
+* [Predictig, i.e. denoising images: Convallaria-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-3-Prediction.ipynb)
