@@ -6,7 +6,14 @@ Requirements:
 
 # Examples:
 
+## Convallaria example
 Checkout our example notebooks. Please use them in the order stated below:
 * [Creating a noise model: Convallaria-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-1-CreateNoiseModel.ipynb)
 * [Training a network: Convallaria-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-2-Training.ipynb)
 * [Predictig, i.e. denoising images: Convallaria-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-3-Prediction.ipynb)
+
+## Mouse example from Zahng et al. 2019 (https://github.com/bmmi/denoising-fluorescence)
+* [Downloading the data: Mouse-0-GetData.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-0-GetData.ipynb)
+* [Creating a noise model: Mouse-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-1-CreateNoiseModel.ipynb)
+* [Training a network: Mouse-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-2-Training.ipynb)
+* [Predictig, i.e. denoising images: Mouse-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-3-Prediction.ipynb)
