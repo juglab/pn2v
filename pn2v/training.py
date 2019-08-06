@@ -294,7 +294,7 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
         
     # Calculate mean and std of data.
     # Everything that is processed by the net will be normalized and denormalized using these numbers.
-    combined=np.concatenate((trainData,trainData))
+    combined=np.concatenate((trainData,valData))
     net.mean=np.mean(combined)
     net.std=np.std(combined)
     
@@ -358,7 +358,7 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
             net.train(True)
             avgValLoss=np.mean(losses)
             if len(valHist)==0 or avgValLoss < np.min(np.array(valHist)):
-                torch.save(net,"best"+postfix+".net")
+                torch.save(net,os.path.join(directory,"best_"+postfix+".net"))
             valHist.append(avgValLoss)
             scheduler.step(avgValLoss)
             epoch= (stepCounter / stepsPerEpoch)
