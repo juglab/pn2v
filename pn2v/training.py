@@ -37,7 +37,7 @@ def getStratifiedCoords2D(numPix, shape):
     return coords
 
 
-def randomCropFRI(data, size, numPix, dataClean=None, counter=None):
+def randomCropFRI(data, size, numPix, dataClean=None, counter=None, augment=True):
     '''
     Crop a patch from the next image in the dataset.
     The patches are augmented by randomly deciding to mirror them and/or rotating them by multiples of 90 degrees.
@@ -56,6 +56,9 @@ def randomCropFRI(data, size, numPix, dataClean=None, counter=None):
     counter (optinal): int
         the index of the next image to be used. 
         If not set, a random image will be used.
+    augment: bool
+        should the patches be randomy flipped and rotated?
+    
     Returns
     ----------
     imgOut: numpy array 
@@ -83,10 +86,10 @@ def randomCropFRI(data, size, numPix, dataClean=None, counter=None):
     imgClean=img
     if dataClean is not None:
         imgClean=dataClean[index]
-    imgOut, imgOutC, mask =randomCrop(img, size, numPix, imgClean=imgClean)
+    imgOut, imgOutC, mask =randomCrop(img, size, numPix, imgClean=imgClean, augment=augment)
     return imgOut, imgOutC, mask, counter
 
-def randomCrop(img, size, numPix,imgClean=None):
+def randomCrop(img, size, numPix,imgClean=None, augment=True):
     '''
     Cuts out a random crop from an image.
     Manipulates pixels in the image (N2V style) and produces the corresponding mask of manipulated pixels.
@@ -103,6 +106,8 @@ def randomCrop(img, size, numPix,imgClean=None):
     dataClean(optinal): numpy array 
         This dataset could hold your target data e.g. clean images.
         If it is not provided the function will use the image from 'data' N2V style
+    augment: bool
+        should the patches be randomy flipped and rotated?
         
     Returns
     ----------    
@@ -147,20 +152,21 @@ def randomCrop(img, size, numPix,imgClean=None):
         imgOut[b,a]=repl
         mask[b,a]=1.0
 
-    rot=np.random.randint(0,4)
-    imgOut=np.array(np.rot90(imgOut,rot))
-    imgOutC=np.array(np.rot90(imgOutC,rot))
-    mask=np.array(np.rot90(mask,rot))
-    if np.random.choice((True,False)):
-        imgOut=np.array(np.flip(imgOut))
-        imgOutC=np.array(np.flip(imgOutC))
-        mask=np.array(np.flip(mask))
+    if augment:
+        rot=np.random.randint(0,4)
+        imgOut=np.array(np.rot90(imgOut,rot))
+        imgOutC=np.array(np.rot90(imgOutC,rot))
+        mask=np.array(np.rot90(mask,rot))
+        if np.random.choice((True,False)):
+            imgOut=np.array(np.flip(imgOut))
+            imgOutC=np.array(np.flip(imgOutC))
+            mask=np.array(np.flip(mask))
 
 
     return imgOut, imgOutC, mask
 
 
-def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
+def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augment=True):
     '''
     This function will assemble a minibatch and process it using the a network.
     
@@ -178,6 +184,8 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
         The batch size.
     numPix: int
         The number of pixels that is to be manipulated/masked N2V style.
+    augment: bool
+        should the patches be randomy flipped and rotated?
 
     Returns
     ----------
@@ -205,7 +213,8 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
         im,l,m, dataCounter=randomCropFRI(my_train_data,
                                           size,
                                           numPix,
-                                          counter=dataCounter)
+                                          counter=dataCounter,
+                                          augment=augment)
         inputs[j,:,:,:]=utils.imgToTensor(im)
         labels[j,:,:]=utils.imgToTensor(l)
         masks[j,:,:]=utils.imgToTensor(m)
@@ -245,7 +254,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                  numOfEpochs=200, stepsPerEpoch=50,
                  batchSize=4, patchSize=100, learningRate=0.0001,
                  numMaskedPixels=100*100/32.0, 
-                 virtualBatchSize=20, valSize=20
+                 virtualBatchSize=20, valSize=20,
+                 augment=True
                  ):
     '''
     Train a network using PN2V
@@ -283,6 +293,9 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
         The number of batches that are processed before a gradient step is performed.
     valSize: int
         The number of validation patches processed after each epoch.
+    augment: bool
+        should the patches be randomy flipped and rotated? 
+    
         
     Returns
     ----------    
@@ -324,7 +337,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                patchSize, 
                                                                batchSize,
                                                                numMaskedPixels,
-                                                               device)
+                                                               device,
+                                                               augment = augment)
             loss=lossFunction(outputs, labels, masks, noiseModel)
             loss.backward()
             running_loss += loss.item()
@@ -352,7 +366,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                   patchSize, 
                                                                   batchSize,
                                                                   numMaskedPixels,
-                                                                  device)
+                                                                  device,
+                                                                  augment = augment)
                 loss=lossFunction(outputs, labels, masks, noiseModel)
                 losses.append(loss.item())
             net.train(True)
