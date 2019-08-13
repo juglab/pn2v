@@ -5,7 +5,7 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--histogram", help="name of .npy-file containing the noise model histogram", default='noisModel.npy')
+parser.add_argument("--histogram", help="name of .npy-file containing the noise model histogram", default='noiseModel.npy')
 parser.add_argument("--name", help="name of your network", default='N2V')
 parser.add_argument("--dataPath", help="The path to your training data")
 parser.add_argument("--fileName", help="name of your training data file", default="*.tif")
