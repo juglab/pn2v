@@ -14,9 +14,9 @@ parser.add_argument("--validationFraction", help="Fraction of data you want to u
 parser.add_argument("--patchSizeXY", help="XY-size of your training patches", default=64, type=int)
 #parser.add_argument("--patchSizeZ", help="Z-size of your training patches", default=64, type=int)
 parser.add_argument("--epochs", help="number of training epochs", default=200, type=int)
-parser.add_argument("--stepsPerEpoch", help="number training steps per epoch", default=5, type=int)
-parser.add_argument("--batchSize", help="size of your training batches", default=1, type=int)
-parser.add_argument("--virtualBatchSize", help="size of virtual batch", default=5, type=int)
+parser.add_argument("--stepsPerEpoch", help="number training steps per epoch", default=50, type=int)
+parser.add_argument("--batchSize", help="size of your training batches", default=4, type=int)
+parser.add_argument("--virtualBatchSize", help="size of virtual batch", default=20, type=int)
 parser.add_argument("--netDepth", help="depth of your U-Net", default=2, type=int)
 
 
@@ -96,7 +96,9 @@ net = UNet(800, depth=args.netDepth)
 
 # Split training and validation data.
 my_train_data=data[:-5].copy()
+np.random.shuffle(my_train_data)
 my_val_data=data[-5:].copy()
+np.random.shuffle(my_val_data)
 
 # Start training.
 trainHist, valHist = training.trainNetwork(net=net, trainData=my_train_data, valData=my_val_data,
