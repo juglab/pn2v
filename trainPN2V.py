@@ -103,5 +103,8 @@ np.random.shuffle(my_val_data)
 # Start training.
 trainHist, valHist = training.trainNetwork(net=net, trainData=my_train_data, valData=my_val_data,
                                            postfix=args.name, directory=path, noiseModel=noiseModel,
-                                           device=device, numOfEpochs= args.epochs, stepsPerEpoch=args.stepsPerEpoch, virtualBatchSize=args.virtualBatchSize, batchSize=args.batchSize, learningRate=args.learningRate)
+                                           device=device, numOfEpochs= args.epochs, stepsPerEpoch=args.stepsPerEpoch,
+                                           virtualBatchSize=args.virtualBatchSize, batchSize=args.batchSize,
+                                           learningRate=args.learningRate,
+                                           augment=False)
 
