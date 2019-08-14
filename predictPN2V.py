@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from glob import glob
+import glob
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--baseDir", help="directory in which all your network will live", default='models')
@@ -11,6 +11,7 @@ parser.add_argument("--fileName", help="name of your data file", default="*.tif"
 parser.add_argument("--output", help="The path to which your data is to be saved", default='.')
 parser.add_argument("--tileSize", help="width/height of tiles used to make it fit GPU memory", default=256, type=int)
 parser.add_argument("--tileOvp", help="overlap of tiles used to make it fit GPU memory", default=48, type=int)
+parser.add_argument("--histogram", help="name of .npy-file containing the noise model histogram", default='noiseModel.npy')
 
 if len(sys.argv)==1:
     parser.print_help(sys.stderr)
@@ -37,11 +38,13 @@ from pn2v import histNoiseModel
 
 
 device=utils.getDevice()
+path=args.dataPath
 
 
 ####################################################
 #           PREPARE Noise Model
 ####################################################
+
 
 # We are loading the histogram from the 'Convallaria-1-CreateNoiseModel' notebook
 histogram=np.load(path+args.histogram)
@@ -57,7 +60,7 @@ noiseModel=histNoiseModel.NoiseModel(histogram, device=device)
 ####################################################
 
 # Load the network, created in the 'Convallaria-2-Training' notebook
-net=torch.load(path+"/last_conv.net")
+net=torch.load(path+"/last_"+args.name+".net")
 
 
 ####################################################
@@ -65,7 +68,6 @@ net=torch.load(path+"/last_conv.net")
 ####################################################
 
 
-path=args.dataPath
 files=glob.glob(path+args.fileName)
 
 for f in files:
