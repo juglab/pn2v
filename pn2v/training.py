@@ -160,7 +160,7 @@ def randomCrop(img, size, numPix,imgClean=None):
     return imgOut, imgOutC, mask
 
 
-def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
+def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, outScaling):
     '''
     This function will assemble a minibatch and process it using the a network.
     
@@ -178,6 +178,8 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
         The batch size.
     numPix: int
         The number of pixels that is to be manipulated/masked N2V style.
+    outScaling: float
+        We found that scaling the output by a factor helps to speedup training.
 
     Returns
     ----------
@@ -218,7 +220,7 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
     meanTorch=torch.Tensor(np.array(net.mean)).to(device)
     
     # Forward step
-    outputs = net((inputs_raw-meanTorch)/stdTorch) * 10.0 #We found that this factor can speed up training
+    outputs = net((inputs_raw-meanTorch)/stdTorch) * outScaling #We found that this factor can speed up training
     samples=(outputs).permute(1, 0, 2, 3)
     
     # Denormalize
@@ -226,7 +228,19 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device):
     
     return samples, labels, masks, dataCounter
 
-def lossFunction(samples, labels, masks, noiseModel):
+
+def lossFunctionN2V(samples, labels, masks):
+    '''
+    The loss function as described in Eq. 7 of the paper.
+    '''
+        
+    errors=(labels-torch.mean(samples,dim=0))**2
+
+    # Average over pixels and batch
+    loss= torch.sum( errors *masks  ) /torch.sum(masks)
+    return loss
+
+def lossFunctionPN2V(samples, labels, masks, noiseModel):
     '''
     The loss function as described in Eq. 7 of the paper.
     '''
@@ -240,12 +254,20 @@ def lossFunction(samples, labels, masks, noiseModel):
     return loss
 
 
+def lossFunction(samples, labels, masks, noiseModel, pn2v, std=None):
+    if pn2v:
+        return lossFunctionPN2V(samples, labels, masks, noiseModel)
+    else:
+        return lossFunctionN2V(samples, labels, masks)/(std**2)
+
+
 def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                  directory='.',
                  numOfEpochs=200, stepsPerEpoch=50,
                  batchSize=4, patchSize=100, learningRate=0.0001,
                  numMaskedPixels=100*100/32.0, 
-                 virtualBatchSize=20, valSize=20
+                 virtualBatchSize=20, valSize=20,
+                 outScaling=10.0
                  ):
     '''
     Train a network using PN2V
@@ -260,7 +282,7 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
     valData: numpy array
         Our validation data. A 3D array that is interpreted as a stack of 2D images.
     noiseModel: NoiseModel
-        The noise model we will use during training.
+        The noise model we will use during training. If None training will be simple N2V
     postfix: string
         This identifier is attached to the names of the files that will be saved during training.
     device: 
@@ -283,6 +305,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
         The number of batches that are processed before a gradient step is performed.
     valSize: int
         The number of validation patches processed after each epoch.
+    outScaling: float
+        We found that scaling the output by a factor (default=10) helps to speedup training.
         
     Returns
     ----------    
@@ -291,7 +315,7 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
     valHist: numpy array
         A numpy array containing the avg. validation loss after each epoch.
     '''
-        
+    
     # Calculate mean and std of data.
     # Everything that is processed by the net will be normalized and denormalized using these numbers.
     combined=np.concatenate((trainData,valData))
@@ -309,6 +333,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
 
     trainHist=[]
     valHist=[]
+    
+    pn2v= (noiseModel is not None)
 
     
     while stepCounter / stepsPerEpoch < numOfEpochs:  # loop over the dataset multiple times
@@ -324,8 +350,9 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                patchSize, 
                                                                batchSize,
                                                                numMaskedPixels,
-                                                               device)
-            loss=lossFunction(outputs, labels, masks, noiseModel)
+                                                               device,
+                                                               outScaling)
+            loss=lossFunction(outputs, labels, masks, noiseModel, pn2v, net.std)
             loss.backward()
             running_loss += loss.item()
             losses.append(loss.item())
@@ -352,8 +379,9 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                   patchSize, 
                                                                   batchSize,
                                                                   numMaskedPixels,
-                                                                  device)
-                loss=lossFunction(outputs, labels, masks, noiseModel)
+                                                                  device,
+                                                                  outScaling)
+                loss=lossFunction(outputs, labels, masks, noiseModel, pn2v, net.std)
                 losses.append(loss.item())
             net.train(True)
             avgValLoss=np.mean(losses)
