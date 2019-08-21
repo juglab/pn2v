@@ -17,3 +17,8 @@ Checkout our example notebooks. Please use them in the order stated below:
 * [Creating a noise model: Mouse-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-1-CreateNoiseModel.ipynb)
 * [Training a network: Mouse-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-2-Training.ipynb)
 * [Predictig, i.e. denoising images: Mouse-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-3-Prediction.ipynb)
+
+## N2V Convallaria example
+PN2V now includes also N2V functionallity. See the following notbooks for an example on how to use it.
+* [Training a network: N2V-Convallaria-1-Training.ipynb](https://github.com/juglab/pn2v/blob/master/N2V-Convallaria-1-Training.ipynb)
+* [Predictig, i.e. denoising images: N2V-Convallaria-2-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/N2V-Convallaria-2-Prediction.ipynb)
