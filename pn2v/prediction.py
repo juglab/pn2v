@@ -10,7 +10,7 @@ from pn2v.utils import denormalize
 from pn2v.utils import normalize
 
 
-def predict(im, net, noiseModel, device):
+def predict(im, net, noiseModel, device, outScaling):
     '''
     Process an image using our network.
     
@@ -24,7 +24,8 @@ def predict(im, net, noiseModel, device):
         The noise model to be used.
     device:
         The device your network lives on, e.g. your GPU
-        
+    outScaling: float
+        We found that scaling the output by a factor (default=10) helps to speedup training.
     Returns
     ----------
     means: numpy array
@@ -49,37 +50,34 @@ def predict(im, net, noiseModel, device):
 
     output=net(inputs)
 
-    
-    samples = (output).permute(1, 0, 2, 3)*10 #We found that this factor can speed up training
+    samples = (output).permute(1, 0, 2, 3)*outScaling #We found that this factor can speed up training
     
     # denormalize
     samples = samples * stdTorch + meanTorch
-
-    # call likelihood using denormalized observations and samples
-    likelihoods=noiseModel.likelihood(inputs_raw ,samples )
-
-
-    mseEst = torch.sum(likelihoods*samples,dim=0,keepdim=True)[0,...] # Sum up over all samples
-    mseEst/= torch.sum(likelihoods,dim=0,keepdim=True)[0,...] # Normalize
-
     means = torch.mean(samples,dim=0,keepdim=True)[0,...] # Sum up over all samples
-
-    # Get data from GPU
-    mseEst=mseEst.cpu().detach().numpy()
     means=means.cpu().detach().numpy()
-
-    # Reshape to 2D images and remove padding
     means.shape=(output.shape[2],output.shape[3])
+    
+    if noiseModel is not None:
+        
+        # call likelihood using denormalized observations and samples
+        likelihoods=noiseModel.likelihood(inputs_raw ,samples )
 
 
-    mseEst.shape=(output.shape[2],output.shape[3])
+        mseEst = torch.sum(likelihoods*samples,dim=0,keepdim=True)[0,...] # Sum up over all samples
+        mseEst/= torch.sum(likelihoods,dim=0,keepdim=True)[0,...] # Normalize
+
+        # Get data from GPU
+        mseEst=mseEst.cpu().detach().numpy()
+        mseEst.shape=(output.shape[2],output.shape[3])
+        return means,mseEst
+    
+    else:
+        return means, None
 
 
-    return means,mseEst
 
-
-
-def tiledPredict(im, net, ps, overlap, noiseModel, device):
+def tiledPredict(im, net, ps, overlap, noiseModel, device, outScaling=10.0):
     '''
     Tile the image to save GPU memory.
     Process it using our network.
@@ -95,9 +93,11 @@ def tiledPredict(im, net, ps, overlap, noiseModel, device):
     overlap: int
         number of pixels we want the tiles to overlab in x and y
     noiseModel: NoiseModel
-        The noise model to be used.
+        The noise model to be used. If None, function will not return MMSE estimate
     device:
         The device your network lives on, e.g. your GPU
+    outScaling: float
+        We found that scaling the output by a factor (default=10) helps to speedup training.
         
     Returns
     ----------
@@ -106,10 +106,12 @@ def tiledPredict(im, net, ps, overlap, noiseModel, device):
         This is similar to normal N2V.
     mseEst: numpy array
         Image containing the MMSE prediction, computed using the prior and noise model.
+        Will be only returned if a noise model is provided
     '''
     
     means=np.zeros(im.shape)
-    mseEst=np.zeros(im.shape)
+    if noiseModel is not None:
+        mseEst=np.zeros(im.shape)
     xmin=0
     ymin=0
     xmax=ps
@@ -118,9 +120,10 @@ def tiledPredict(im, net, ps, overlap, noiseModel, device):
     while (xmin<im.shape[1]):
         ovTop=0
         while (ymin<im.shape[0]):
-            a,b = predict(im[ymin:ymax,xmin:xmax], net, noiseModel, device)
+            a,b = predict(im[ymin:ymax,xmin:xmax], net, noiseModel, device, outScaling=outScaling)
             means[ymin:ymax,xmin:xmax][ovTop:,ovLeft:] = a[ovTop:,ovLeft:]
-            mseEst[ymin:ymax,xmin:xmax][ovTop:,ovLeft:] = b[ovTop:,ovLeft:]
+            if noiseModel is not None:
+                mseEst[ymin:ymax,xmin:xmax][ovTop:,ovLeft:] = b[ovTop:,ovLeft:]
             ymin=ymin-overlap+ps
             ymax=ymin+ps
             ovTop=overlap//2
@@ -129,4 +132,8 @@ def tiledPredict(im, net, ps, overlap, noiseModel, device):
         xmin=xmin-overlap+ps
         xmax=xmin+ps
         ovLeft=overlap//2
-    return means, mseEst
+        
+    if noiseModel is not None:   
+        return means, mseEst
+    else:
+        return means

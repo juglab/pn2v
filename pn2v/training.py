@@ -37,7 +37,7 @@ def getStratifiedCoords2D(numPix, shape):
     return coords
 
 
-def randomCropFRI(data, size, numPix, dataClean=None, counter=None, augment=True):
+def randomCropFRI(data, size, numPix, supervised=False, counter=None, augment=True):
     '''
     Crop a patch from the next image in the dataset.
     The patches are augmented by randomly deciding to mirror them and/or rotating them by multiples of 90 degrees.
@@ -82,14 +82,23 @@ def randomCropFRI(data, size, numPix, dataClean=None, counter=None, augment=True
         index=counter
         counter+=1
 
-    img=data[index]
-    imgClean=img
-    if dataClean is not None:
-        imgClean=dataClean[index]
-    imgOut, imgOutC, mask =randomCrop(img, size, numPix, imgClean=imgClean, augment=augment)
+    if supervised:
+        img=data[index,...,0]
+        imgClean=data[index,...,1]
+        manipulate=False
+    else:
+        img=data[index]
+        imgClean=img
+        manipulate=True
+        
+    imgOut, imgOutC, mask = randomCrop(img, size, numPix,
+                                      imgClean=imgClean,
+                                      augment=augment,
+                                      manipulate = manipulate )
+    
     return imgOut, imgOutC, mask, counter
 
-def randomCrop(img, size, numPix,imgClean=None, augment=True):
+def randomCrop(img, size, numPix, imgClean=None, augment=True, manipulate=True):
     '''
     Cuts out a random crop from an image.
     Manipulates pixels in the image (N2V style) and produces the corresponding mask of manipulated pixels.
@@ -128,29 +137,32 @@ def randomCrop(img, size, numPix,imgClean=None, augment=True):
 
     imgOut = img[y:y+size, x:x+size].copy()
     imgOutC= imgClean[y:y+size, x:x+size].copy()
-    mask=np.zeros(imgOut.shape)
+    
     maxA=imgOut.shape[1]-1
     maxB=imgOut.shape[0]-1
     
-    hotPixels=getStratifiedCoords2D(numPix,imgOut.shape)
+    if manipulate:
+        mask=np.zeros(imgOut.shape)
+        hotPixels=getStratifiedCoords2D(numPix,imgOut.shape)
+        for p in hotPixels:
+            a,b=p[1],p[0]
 
-    for p in hotPixels:
-        a,b=p[1],p[0]
+            roiMinA=max(a-2,0)
+            roiMaxA=min(a+3,maxA)
+            roiMinB=max(b-2,0)
+            roiMaxB=min(b+3,maxB)
+            roi=imgOut[roiMinB:roiMaxB,roiMinA:roiMaxA]
+            a_ = 2
+            b_ = 2
+            while a_==2 and b_==2:
+                a_ = np.random.randint(0, roi.shape[1] )
+                b_ = np.random.randint(0, roi.shape[0] )
 
-        roiMinA=max(a-2,0)
-        roiMaxA=min(a+3,maxA)
-        roiMinB=max(b-2,0)
-        roiMaxB=min(b+3,maxB)
-        roi=imgOut[roiMinB:roiMaxB,roiMinA:roiMaxA]
-        a_ = 2
-        b_ = 2
-        while a_==2 and b_==2:
-            a_ = np.random.randint(0, roi.shape[1] )
-            b_ = np.random.randint(0, roi.shape[0] )
-
-        repl=roi[b_,a_]
-        imgOut[b,a]=repl
-        mask[b,a]=1.0
+            repl=roi[b_,a_]
+            imgOut[b,a]=repl
+            mask[b,a]=1.0
+    else:
+        mask=np.ones(imgOut.shape)
 
     if augment:
         rot=np.random.randint(0,4)
@@ -166,7 +178,7 @@ def randomCrop(img, size, numPix,imgClean=None, augment=True):
     return imgOut, imgOutC, mask
 
 
-def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augment=True):
+def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augment=True, supervised=True):
     '''
     This function will assemble a minibatch and process it using the a network.
     
@@ -186,7 +198,6 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augm
         The number of pixels that is to be manipulated/masked N2V style.
     augment: bool
         should the patches be randomy flipped and rotated?
-
     Returns
     ----------
     samples: pytorch tensor
@@ -214,7 +225,8 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augm
                                           size,
                                           numPix,
                                           counter=dataCounter,
-                                          augment=augment)
+                                          augment=augment,
+                                          supervised=supervised)
         inputs[j,:,:,:]=utils.imgToTensor(im)
         labels[j,:,:]=utils.imgToTensor(l)
         masks[j,:,:]=utils.imgToTensor(m)
@@ -235,7 +247,18 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augm
     
     return samples, labels, masks, dataCounter
 
-def lossFunction(samples, labels, masks, noiseModel):
+def lossFunctionN2V(samples, labels, masks):
+    '''
+    The loss function as described in Eq. 7 of the paper.
+    '''
+        
+    errors=(labels-torch.mean(samples,dim=0))**2
+
+    # Average over pixels and batch
+    loss= torch.sum( errors *masks  ) /torch.sum(masks)
+    return loss
+
+def lossFunctionPN2V(samples, labels, masks, noiseModel):
     '''
     The loss function as described in Eq. 7 of the paper.
     '''
@@ -249,13 +272,22 @@ def lossFunction(samples, labels, masks, noiseModel):
     return loss
 
 
+def lossFunction(samples, labels, masks, noiseModel, pn2v, std=None):
+    if pn2v:
+        return lossFunctionPN2V(samples, labels, masks, noiseModel)
+    else:
+        return lossFunctionN2V(samples, labels, masks)/(std**2)
+
+
+
 def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                  directory='.',
                  numOfEpochs=200, stepsPerEpoch=50,
                  batchSize=4, patchSize=100, learningRate=0.0001,
                  numMaskedPixels=100*100/32.0, 
                  virtualBatchSize=20, valSize=20,
-                 augment=True
+                 augment=True,
+                 supervised=False
                  ):
     '''
     Train a network using PN2V
@@ -322,7 +354,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
 
     trainHist=[]
     valHist=[]
-
+        
+    pn2v= (noiseModel is not None) and (not supervised)
     
     while stepCounter / stepsPerEpoch < numOfEpochs:  # loop over the dataset multiple times
         losses=[]
@@ -338,8 +371,9 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                batchSize,
                                                                numMaskedPixels,
                                                                device,
-                                                               augment = augment)
-            loss=lossFunction(outputs, labels, masks, noiseModel)
+                                                               augment = augment,
+                                                               supervised = supervised)
+            loss=lossFunction(outputs, labels, masks, noiseModel, pn2v, net.std)
             loss.backward()
             running_loss += loss.item()
             losses.append(loss.item())
@@ -367,8 +401,9 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
                                                                   batchSize,
                                                                   numMaskedPixels,
                                                                   device,
-                                                                  augment = augment)
-                loss=lossFunction(outputs, labels, masks, noiseModel)
+                                                                  augment = augment,
+                                                                  supervised = supervised)
+                loss=lossFunction(outputs, labels, masks, noiseModel, pn2v, net.std)
                 losses.append(loss.item())
             net.train(True)
             avgValLoss=np.mean(losses)
