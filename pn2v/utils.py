@@ -35,6 +35,7 @@ def denormalize(x, mean, std):
 
 def getDevice():
     print("CUDA available?",torch.cuda.is_available())
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    assert(torch.cuda.is_available())
+    device = torch.device("cuda")
     return device
     
