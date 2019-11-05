@@ -47,11 +47,8 @@ device=utils.getDevice()
 
 
 import glob
-print('everything imported')
-
 
 print("args",str(args.name))
-
 
 
 ####################################################
@@ -81,7 +78,6 @@ print(data.shape)
 #           PREPARE Noise Model
 ####################################################
 
-# We are loading the histogram from the 'Convallaria-1-CreateNoiseModel' notebook
 histogram=np.load(path+args.histogram)
 
 # Create a NoiseModel object from the histogram.

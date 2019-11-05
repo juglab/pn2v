@@ -45,13 +45,8 @@ path=args.dataPath
 #           PREPARE Noise Model
 ####################################################
 
-
-# We are loading the histogram from the 'Convallaria-1-CreateNoiseModel' notebook
 histogram=np.load(path+args.histogram)
-
-# Create a NoiseModel object from the histogram.
 noiseModel=histNoiseModel.NoiseModel(histogram, device=device)
-
 
 
 
@@ -59,7 +54,6 @@ noiseModel=histNoiseModel.NoiseModel(histogram, device=device)
 #           LOAD NETWORK
 ####################################################
 
-# Load the network, created in the 'Convallaria-2-Training' notebook
 net=torch.load(path+"/last_"+args.name+".net")
 
 
