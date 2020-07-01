@@ -1,5 +1,5 @@
 # Probabilistic Noise2Void
-This repository hosts our implementation of Probabilistic Noise2Void. The original paper can be found at https://arxiv.org/abs/1906.00651. PN2V is self-supervised CNN-based-denoising that achieves results close to state-of-the-art methods, but requires only individual noisy images for training.
+This repository hosts our implementation of Probabilistic Noise2Void. The original paper can be found at https://www.frontiersin.org/articles/10.3389/fcomp.2020.00005/full, a preprint at https://arxiv.org/abs/1906.00651. PN2V is self-supervised CNN-based-denoising that achieves results close to state-of-the-art methods, but requires only individual noisy images for training.
 Requirements:
 * Pytorch: https://pytorch.org/get-started/locally/
 
