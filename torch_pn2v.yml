@@ -15,4 +15,4 @@ dependencies:
   - jupyter
   - pip
   - pip:
-      - git+https://github.com/juglab/ppn2v.git
+      - git+https://github.com/juglab/pn2v.git
