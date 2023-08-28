@@ -13,6 +13,7 @@ dependencies:
   - scipy
   - tifffile
   - jupyter
+  - scikit-image
   - pip
   - pip:
       - git+https://github.com/juglab/pn2v.git
