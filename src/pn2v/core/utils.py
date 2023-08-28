@@ -2,10 +2,7 @@
 #   Utility Functions
 ############################################
 
-import torch.optim as optim
-import os
 import torch
-import torch.nn as nn
 import sys
 import torchvision
 import numpy as np
@@ -35,7 +32,10 @@ def denormalize(x, mean, std):
 
 def getDevice():
     print("CUDA available?",torch.cuda.is_available())
-    assert(torch.cuda.is_available())
-    device = torch.device("cuda")
+    if not torch.cuda.is_available():
+        print("WARNING: CUDA not available. Using CPU.")
+        device = torch.device("cpu")
+    else:
+        device = torch.device("cuda")
     return device
     

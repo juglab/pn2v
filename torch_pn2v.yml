@@ -1,0 +1,19 @@
+name: pn2v
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch
+  - torchvision
+  - pytorch-cuda=11.8
+  - numpy
+  - matplotlib
+  - scipy
+  - tifffile
+  - jupyter
+  - scikit-image
+  - pip
+  - pip:
+      - git+https://github.com/juglab/pn2v.git
