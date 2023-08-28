@@ -1,16 +1,11 @@
 import torch.optim as optim
 import os
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
-from collections import OrderedDict
-from torch.nn import init
-import numpy as np
-import matplotlib.pyplot as plt
-import torchvision
 
-from pn2v import utils
+
+import numpy as np
+
+from .utils import imgToTensor, printNow
 
 
 ############################################
@@ -227,9 +222,9 @@ def trainingPred(my_train_data, net, dataCounter, size, bs, numPix, device, augm
                                           counter=dataCounter,
                                           augment=augment,
                                           supervised=supervised)
-        inputs[j,:,:,:]=utils.imgToTensor(im)
-        labels[j,:,:]=utils.imgToTensor(l)
-        masks[j,:,:]=utils.imgToTensor(m)
+        inputs[j,:,:,:]=imgToTensor(im)
+        labels[j,:,:]=imgToTensor(l)
+        masks[j,:,:]=imgToTensor(m)
 
     # Move to GPU
     inputs_raw, labels, masks= inputs.to(device), labels.to(device), masks.to(device)
@@ -384,8 +379,8 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
         if stepCounter % stepsPerEpoch == stepsPerEpoch-1:
             running_loss=(np.mean(losses))
             losses=np.array(losses)
-            utils.printNow("Epoch "+str(int(stepCounter / stepsPerEpoch))+" finished")
-            utils.printNow("avg. loss: "+str(np.mean(losses))+"+-(2SEM)"+str(2.0*np.std(losses)/np.sqrt(losses.size)))
+            printNow("Epoch "+str(int(stepCounter / stepsPerEpoch))+" finished")
+            printNow("avg. loss: "+str(np.mean(losses))+"+-(2SEM)"+str(2.0*np.std(losses)/np.sqrt(losses.size)))
             trainHist.append(np.mean(losses))
             losses=[]
             torch.save(net,os.path.join(directory,"last_"+postfix+".net"))
@@ -414,5 +409,5 @@ def trainNetwork(net, trainData, valData, noiseModel, postfix, device,
             epoch= (stepCounter / stepsPerEpoch)
             np.save(os.path.join(directory,"history"+postfix+".npy"), (np.array( [np.arange(epoch),trainHist,valHist ] ) ) )
 
-    utils.printNow('Finished Training')
+    printNow('Finished Training')
     return trainHist, valHist
