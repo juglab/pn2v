@@ -17,17 +17,17 @@ In the resulting gifs, regions with high uncertainty are characterized by strong
 
 ## Convallaria example
 Checkout our example notebooks. Please use them in the order stated below:
-* [Creating a noise model: Convallaria-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-1-CreateNoiseModel.ipynb)
-* [Training a network: Convallaria-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-2-Training.ipynb)
-* [Predictig, i.e. denoising images: Convallaria-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Convallaria-3-Prediction.ipynb)
+* [Creating a noise model: Convallaria-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Convallaria-1-CreateNoiseModel.ipynb)
+* [Training a network: Convallaria-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Convallaria-2-Training.ipynb)
+* [Predictig, i.e. denoising images: Convallaria-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Convallaria-3-Prediction.ipynb)
 
 ## Mouse example from Zahng et al. 2019 (https://github.com/bmmi/denoising-fluorescence)
-* [Downloading the data: Mouse-0-GetData.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-0-GetData.ipynb)
-* [Creating a noise model: Mouse-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-1-CreateNoiseModel.ipynb)
-* [Training a network: Mouse-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-2-Training.ipynb)
-* [Predictig, i.e. denoising images: Mouse-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/Mouse-3-Prediction.ipynb)
+* [Downloading the data: Mouse-0-GetData.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Mouse-0-GetData.ipynb)
+* [Creating a noise model: Mouse-1-CreateNoiseModel.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Mouse-1-CreateNoiseModel.ipynb)
+* [Training a network: Mouse-2-Training.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Mouse-2-Training.ipynb)
+* [Predictig, i.e. denoising images: Mouse-3-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/examples/Mouse-3-Prediction.ipynb)
 
 ## N2V Convallaria example
 PN2V now includes also N2V functionallity. See the following notbooks for an example on how to use it.
-* [Training a network: N2V-Convallaria-1-Training.ipynb](https://github.com/juglab/pn2v/blob/master/N2V-Convallaria-1-Training.ipynb)
-* [Predictig, i.e. denoising images: N2V-Convallaria-2-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/N2V-Convallaria-2-Prediction.ipynb)
+* [Training a network: N2V-Convallaria-1-Training.ipynb](https://github.com/juglab/pn2v/blob/master/examples/N2V-Convallaria-1-Training.ipynb)
+* [Predictig, i.e. denoising images: N2V-Convallaria-2-Prediction.ipynb](https://github.com/juglab/pn2v/blob/master/examples/N2V-Convallaria-2-Prediction.ipynb)
